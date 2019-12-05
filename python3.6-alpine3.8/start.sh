@@ -1,6 +1,16 @@
 #! /usr/bin/env sh
 set -e
 
+if [ "$1" = "" ]; then
+    GUNICORN_OPTS=""
+else
+    if case "$1" in "-"*) true;; *) false;; esac; then
+        GUNICORN_OPTS="$@"
+    else
+        exec "$@"
+    fi
+fi
+
 if [ -f /app/app/main.py ]; then
     DEFAULT_MODULE_NAME=app.main
 elif [ -f /app/main.py ]; then
@@ -25,9 +35,9 @@ echo "Checking for script in $PRE_START_PATH"
 if [ -f $PRE_START_PATH ] ; then
     echo "Running script $PRE_START_PATH"
     . "$PRE_START_PATH"
-else 
+else
     echo "There is no script $PRE_START_PATH"
 fi
 
 # Start Gunicorn
-exec gunicorn -k uvicorn.workers.UvicornWorker -c "$GUNICORN_CONF" "$APP_MODULE"
+exec gunicorn -k uvicorn.workers.UvicornWorker -c "$GUNICORN_CONF" $GUNICORN_OPTS "$APP_MODULE"
